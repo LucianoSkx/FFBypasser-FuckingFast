@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      2.8
+// @version      2.9
 // @description  Extracts FuckingFast share links from FitGirl pages and converts them into direct download URLs. Two-step flow, with links saved automatically between pages.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -306,20 +306,20 @@
         panel.id = 'ffbypasser-panel';
         panel.style.cssText = [
             'position:fixed', 'right:12px', 'bottom:12px', 'z-index:2147483647',
-            'display:flex', 'flex-direction:column', 'gap:6px',
-            'padding:10px', 'border-radius:8px', 'width:220px',
-            'background:rgba(10,10,10,.92)', 'box-shadow:0 0 12px rgba(0,0,0,.6)',
-            'border:1px solid #333', 'color:#e5e5e5', 'font-family:monospace',
-            'font-size:12px',
+            'display:flex', 'flex-direction:column', 'gap:4px',
+            'padding:12px', 'border-radius:10px', 'width:200px',
+            'background:rgba(20,20,20,.95)', 'box-shadow:0 8px 32px rgba(0,0,0,.5)',
+            'border:1px solid #2a2a2a', 'color:#e5e5e5',
+            'font-family:-apple-system,Segoe UI,Roboto,sans-serif', 'font-size:12px',
         ].join(';');
         panel.innerHTML = `
-            <div style="font-weight:bold;color:#00ff00;">FFBypasser</div>
-            <button id="ffb-extract" style="padding:6px;border:none;border-radius:4px;cursor:pointer;background:#38bdf8;color:#000;">Extract FF links (FitGirl)</button>
-            <button id="ffb-convert" style="padding:6px;border:none;border-radius:4px;cursor:pointer;background:#00ff00;color:#000;">Convert → direct</button>
-            <button id="ffb-paste" style="padding:6px;border:none;border-radius:4px;cursor:pointer;background:#f59e0b;color:#000;">Paste links manually</button>
-            <div id="ffb-links" style="max-height:160px;overflow-y:auto;background:#000;border:1px solid #333;border-radius:4px;padding:6px;font-size:11px;word-break:break-all;display:none;"></div>
+            <div style="font-weight:600;font-size:13px;margin-bottom:6px;">FFBypasser</div>
+            <button id="ffb-extract" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Extract FF links (FitGirl)</button>
+            <button id="ffb-convert" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Convert → direct</button>
+            <button id="ffb-paste" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Paste links manually</button>
+            <div id="ffb-links" style="max-height:140px;overflow-y:auto;background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:6px;font-size:11px;word-break:break-all;display:none;"></div>
             <div id="ffb-status" style="color:#888;margin-top:4px;word-break:break-all;"></div>
-            <button id="ffb-close" style="padding:4px;border:none;border-radius:4px;cursor:pointer;background:none;color:#888;">✕ Close</button>
+            <button id="ffb-close" style="padding:5px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#888;">Close</button>
         `;
         document.body.appendChild(panel);
         return panel;
