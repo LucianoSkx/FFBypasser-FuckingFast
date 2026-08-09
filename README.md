@@ -6,12 +6,13 @@ It sends the required POST request for each shared file, extracts the `hx-redire
 
 ## Features
 
-- Extracts FuckingFast links from FitGirl pages automatically
-- Links are **saved between pages** (no copy/paste of arrays needed)
+- Extracts FuckingFast links from FitGirl pages with one click
+- Extracted links appear in a **popup with a Copy button** (also copied to the clipboard automatically)
+- Links are **saved between pages** — extract on FitGirl, convert on fuckingfast.co, no manual copy/paste needed
+- **Auto-convert**: if saved links exist, conversion starts automatically 2 seconds after opening a fuckingfast.co page
 - Converts links to direct download URLs via `POST /f/{id}/go`
 - Page-scan fallback when the fast path fails
 - Concurrent processing (3 at a time) with delay between requests
-- Progress logging in the browser console
 - Automatically downloads results as `Out_Direct_Links.txt`
 - Floating panel, Violentmonkey menu commands and `Ctrl+Shift+F` shortcut
 - No external dependencies
@@ -19,21 +20,25 @@ It sends the required POST request for each shared file, extracts the `hx-redire
 ## Installation
 
 1. Install the [Violentmonkey](https://violentmonkey.github.io/) extension.
-2. Open `FFBypasser.user.js` from this repository and click **Install** (or add a new script in Violentmonkey and paste the contents).
+2. Install the script from this URL (or open `FFBypasser.user.js` and click **Install**):
+   ```
+   https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/FFBypasser.user.js
+   ```
 3. Done — the script activates on FitGirl and FuckingFast pages.
 
 ## Usage
 
 ### Step 1 — Extract the FuckingFast links (FitGirl page)
 
-1. Open the desired **FitGirl** game page.
-2. Click **"Extract FF links (FitGirl)"** on the floating panel (or use the Violentmonkey menu command **"🎯 Extract FF links from this page"**).
-3. All FuckingFast links are saved automatically.
+1. Open the desired **FitGirl** game page (e.g. `fitgirl-repacks.site`).
+2. Click **"Extract FF links (FitGirl)"** on the floating panel (or use the Violentmonkey menu command).
+3. A popup shows the extracted links — click **Copy** to copy them all to the clipboard.
+4. The links are also saved automatically for the next step.
 
 ### Step 2 — Convert to direct links (FuckingFast page)
 
-1. Open any **fuckingfast.co** page (e.g. the first link you want to convert).
-2. Click **"Convert → direct"** on the floating panel (or use the menu command **"🔗 Convert saved links → direct"**).
+1. Open any **fuckingfast.co** page.
+2. The script converts the saved links **automatically after 2 seconds**, or click **"Convert → direct"** on the panel (or the menu command).
 3. The script processes every link and automatically downloads the results as:
 
 ```
@@ -66,6 +71,7 @@ https://cdn3.example.com/file3.rar
 - A delay is included between requests to avoid rate-limiting.
 - Failed requests are reported in the browser console without stopping the extraction.
 - If the fast path fails, the script falls back to scanning the page for a direct download link.
+- The script matches `fitgirl-repacks.site` and `*.fuckingfast.co` domains only.
 
 ## Credits
 
