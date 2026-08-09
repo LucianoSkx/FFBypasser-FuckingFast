@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      4.0
+// @version      4.1
 // @description  Extracts FuckingFast share links from FitGirl pages and resolves them into direct download URLs in a dedicated worker tab, bypassing Cloudflare. Job state is shared between tabs.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -31,6 +31,7 @@
         timeoutMs: 30000,
         tokenWaitMs: 12000,
         captureTimeoutMs: 20000,
+        challengeWaitMs: 90000,
         leaseTtlMs: 15000,
     };
 
@@ -226,6 +227,47 @@
     }
 
     /* ============================================================
+       CLOUDFLARE CHALLENGE HANDLING
+    ============================================================ */
+    let challengeNotified = false;
+
+    function notifyChallenge() {
+        if (challengeNotified) return;
+        challengeNotified = true;
+        GM_notification({ text: 'Cloudflare check pending — complete it in the worker tab', timeout: 6000 });
+        console.log('%c⏳ Complete the Cloudflare check in the worker tab (it stays open until you do)', 'color:#eab308');
+    }
+
+    function isCloudflareChallengePage(win) {
+        const doc = win.document;
+        if (doc.querySelector('#challenge-running, #cf-chl-running, [id^="challenge-"]')) return true;
+        const text = (doc.body && (doc.body.innerText || doc.body.textContent) || '').slice(0, 600);
+        return /just a moment|checking your browser|verifying you are human|verificando se voc/i.test(text);
+    }
+
+    async function waitForChallengeResolved(win, onWaiting) {
+        if (!isCloudflareChallengePage(win)) return true;
+        if (onWaiting) onWaiting();
+        const deadline = Date.now() + CONFIG.challengeWaitMs;
+        while (Date.now() < deadline) {
+            await sleep(1000);
+            if (!isCloudflareChallengePage(win)) return true;
+        }
+        return !isCloudflareChallengePage(win);
+    }
+
+    async function waitForTrigger(win, id) {
+        const deadline = Date.now() + CONFIG.challengeWaitMs;
+        let trigger = null;
+        while (Date.now() < deadline) {
+            trigger = findTrigger(win, id);
+            if (trigger) return trigger;
+            await sleep(1000);
+        }
+        return trigger;
+    }
+
+    /* ============================================================
        TRIGGER + REQUEST DESCRIPTOR (htmx controls)
     ============================================================ */
     function findTrigger(win, id) {
@@ -267,6 +309,7 @@
        STRATEGY 2: fetch from the file page (same-origin iframe)
     ============================================================ */
     async function strategyPageFetch(win, id) {
+        await waitForChallengeResolved(win, notifyChallenge);
         const token = await waitForToken(win);
         const { path, params, headers } = buildRequestDescriptor(win, id, token);
         const response = await win.fetch(path, {
@@ -320,8 +363,8 @@
     ============================================================ */
     async function strategyClick(win, id) {
         try { win.open = () => null; } catch { }
-        await waitForToken(win);
-        const trigger = findTrigger(win, id);
+        await waitForChallengeResolved(win, notifyChallenge);
+        const trigger = await waitForTrigger(win, id);
         if (!trigger) throw new Error('download control not found');
         const capture = armCapture(win);
         try {
@@ -398,7 +441,7 @@
         try {
             frame = await loadFrame(link);
             const win = readableFrameWindow(frame);
-            if (!win) throw new Error('frame blocked');
+            if (!win || isCloudflareChallengePage(win)) throw new Error('frame blocked');
             try {
                 return { directUrl: await strategyPageFetch(win, id), error: null };
             } catch (error) {
@@ -456,6 +499,7 @@
         const lease = store.loadLease();
         if (!canAcquireLease(lease, owner)) return false;
         store.saveLease(createLease(owner));
+        challengeNotified = false;
         const renewal = setInterval(() => {
             try { store.saveLease(createLease(owner)); } catch { }
         }, 5000);
