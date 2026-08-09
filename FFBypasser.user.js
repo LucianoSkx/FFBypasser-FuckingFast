@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
-// @namespace    github.com/cdxud/FFBypasser
+// @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
 // @version      2.0
 // @description  Extracts FuckingFast share links from FitGirl pages and converts them into direct download URLs. Two-step flow, with links saved automatically between pages.
 // @author       cdxud (adapted for Violentmonkey)
