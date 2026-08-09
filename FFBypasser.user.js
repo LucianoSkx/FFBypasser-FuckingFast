@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      4.2
+// @version      4.3
 // @description  Extracts FuckingFast share links from FitGirl pages and resolves them into direct download URLs in a dedicated worker tab, bypassing Cloudflare. Job state is shared between tabs.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -675,7 +675,10 @@
         store.saveJob(job);
         GM_setValue(STORAGE_KEYS.links, links);
         setStatus(panel, `Opening worker tab — ${links.length} links...`);
-        GM_openInTab(links[0], { active: true, insert: true, setParent: true });
+        const workerWin = window.open(links[0], '_blank');
+        if (!workerWin) {
+            GM_openInTab(links[0], { active: true, insert: true, setParent: true });
+        }
         console.log(`%c🎯 Job ${job.id}: ${links.length} links queued`, 'color:#38bdf8', links);
     }
 
@@ -740,20 +743,23 @@
                     const text = formatSuccessfulResults(job);
                     setStatus(panel, `Done — ${s.succeeded} links ready`);
                     if (text) {
-                        showLinksPopup(text.split('\n'));
-                        copyText(text);
                         GM_notification({ text: `${s.succeeded} direct links copied to clipboard`, timeout: 6000 });
                     }
                     setTimeout(() => {
                         try {
-                            if (job && job.sourceUrl) {
-                                location.href = job.sourceUrl;
-                            } else if (window.opener) {
-                                window.opener.focus();
+                            if (window.opener) {
+                                try { window.opener.focus(); } catch { }
                                 window.close();
+                                setTimeout(() => {
+                                    try {
+                                        if (job && job.sourceUrl) location.href = job.sourceUrl;
+                                    } catch { }
+                                }, 2000);
+                            } else if (job && job.sourceUrl) {
+                                location.href = job.sourceUrl;
                             }
                         } catch { }
-                    }, 5000);
+                    }, 1200);
                 } else if (s.done && s.succeeded === 0) {
                     GM_notification({ text: `All ${s.total} links failed. Click Retry failed.`, timeout: 6000 });
                 }
