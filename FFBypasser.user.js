@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      3.2
+// @version      3.3
 // @description  Extracts FuckingFast share links from FitGirl pages and converts them into direct download URLs. Two-step flow, with links saved automatically between pages.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -336,9 +336,6 @@
         panel.innerHTML = `
             <div style="font-weight:600;font-size:13px;margin-bottom:6px;">FFBypasser</div>
             <button id="ffb-extract" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Extract FF links (FitGirl)</button>
-            <button id="ffb-convert" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Convert → direct</button>
-            <button id="ffb-paste" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Paste links manually</button>
-            <div id="ffb-status" style="color:#888;margin-top:4px;word-break:break-all;"></div>
             <button id="ffb-close" style="padding:5px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#888;">Close</button>
         `;
         document.body.appendChild(panel);
@@ -347,30 +344,9 @@
 
     function wirePanel(panel) {
         const status = panel.querySelector('#ffb-status');
-        const setStatus = t => { status.textContent = t; };
 
         panel.querySelector('#ffb-extract').addEventListener('click', () => {
             extractFromFitGirl();
-        });
-
-        panel.querySelector('#ffb-convert').addEventListener('click', async () => {
-            const saved = loadLinks();
-            if (!saved.length) {
-                GM_notification({ text: 'No saved links. Extract on FitGirl or paste manually.', timeout: 4000 });
-                return;
-            }
-            panel.remove();
-            await convertLinks(saved);
-        });
-
-        panel.querySelector('#ffb-paste').addEventListener('click', () => {
-            panel.remove();
-            const raw = prompt('Paste the FuckingFast links (one per line or comma-separated):');
-            if (!raw) return;
-            const links = raw.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
-            if (!links.length) return;
-            saveLinks(links);
-            GM_notification({ text: `${links.length} links saved. Open fuckingfast.co and use "Convert".`, timeout: 5000 });
         });
 
         panel.querySelector('#ffb-close').addEventListener('click', () => panel.remove());
