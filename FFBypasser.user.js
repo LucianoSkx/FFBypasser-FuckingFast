@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      4.3
+// @version      4.4
 // @description  Extracts FuckingFast share links from FitGirl pages and resolves them into direct download URLs in a dedicated worker tab, bypassing Cloudflare. Job state is shared between tabs.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -657,7 +657,12 @@
         }
         const panel = createPanel(role);
         panel.dataset.role = role;
-        panel.querySelector('#ffb-close').addEventListener('click', () => panel.remove());
+        panel.querySelector('#ffb-close').addEventListener('click', () => {
+            if (role === 'worker') {
+                try { window.close(); } catch { }
+            }
+            panel.remove();
+        });
         return panel;
     }
 
@@ -747,17 +752,8 @@
                     }
                     setTimeout(() => {
                         try {
-                            if (window.opener) {
-                                try { window.opener.focus(); } catch { }
-                                window.close();
-                                setTimeout(() => {
-                                    try {
-                                        if (job && job.sourceUrl) location.href = job.sourceUrl;
-                                    } catch { }
-                                }, 2000);
-                            } else if (job && job.sourceUrl) {
-                                location.href = job.sourceUrl;
-                            }
+                            if (window.opener) window.opener.focus();
+                            window.close();
                         } catch { }
                     }, 1200);
                 } else if (s.done && s.succeeded === 0) {
