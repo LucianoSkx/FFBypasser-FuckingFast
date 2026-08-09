@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      2.7
+// @version      2.8
 // @description  Extracts FuckingFast share links from FitGirl pages and converts them into direct download URLs. Two-step flow, with links saved automatically between pages.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -210,63 +210,72 @@
         overlay.id = 'ffb-popup';
         overlay.style.cssText = [
             'position:fixed', 'inset:0', 'z-index:2147483647',
-            'background:rgba(0,0,0,.65)',
+            'background:rgba(15,15,15,.4)',
             'display:flex', 'align-items:center', 'justify-content:center',
         ].join(';');
+        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 
         const box = document.createElement('div');
         box.style.cssText = [
-            'width:min(640px,92vw)', 'max-height:85vh',
-            'display:flex', 'flex-direction:column', 'gap:10px',
-            'padding:16px', 'border-radius:10px',
-            'background:#111', 'border:1px solid #333',
-            'color:#e5e5e5', 'font-family:monospace', 'font-size:12px',
-            'box-shadow:0 0 24px rgba(0,0,0,.8)',
+            'width:min(560px,90vw)',
+            'display:flex', 'flex-direction:column',
+            'padding:20px', 'border-radius:12px',
+            'background:#fff', 'color:#1a1a1a',
+            'font-family:-apple-system,Segoe UI,Roboto,sans-serif', 'font-size:13px',
+            'box-shadow:0 8px 40px rgba(0,0,0,.25)',
         ].join(';');
 
         const header = document.createElement('div');
-        header.textContent = `${links.length} FuckingFast links extracted:`;
-        header.style.cssText = 'font-weight:bold;color:#00ff00;';
+        header.style.cssText = 'font-weight:600;font-size:14px;margin-bottom:12px;';
+        header.textContent = links.length === 1
+            ? '1 link extraído'
+            : `${links.length} links extraídos`;
 
         const textarea = document.createElement('textarea');
         textarea.readOnly = true;
         textarea.value = text;
         textarea.style.cssText = [
-            'flex:1', 'min-height:200px', 'resize:vertical',
-            'background:#000', 'color:#7CFC98', 'border:1px solid #333',
-            'border-radius:6px', 'padding:8px', 'font-family:monospace', 'font-size:12px',
+            'flex:1', 'min-height:180px', 'resize:vertical',
+            'border:1px solid #ddd', 'border-radius:8px',
+            'padding:10px', 'background:#fafafa', 'color:#333',
+            'font-family:ui-monospace,Consolas,monospace', 'font-size:12px',
+            'line-height:1.5',
         ].join(';');
         textarea.addEventListener('click', () => { textarea.select(); });
 
-        const buttons = document.createElement('div');
-        buttons.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+        const footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:12px;';
 
         const copyBtn = document.createElement('button');
-        copyBtn.textContent = '📋 Copy';
-        copyBtn.style.cssText = btnStyle('background:#00ff00;color:#000;');
+        copyBtn.textContent = 'Copy';
+        copyBtn.style.cssText = btnStyle('background:#111;color:#fff;');
+        copyBtn.addEventListener('mouseenter', () => { copyBtn.style.background = '#000'; });
+        copyBtn.addEventListener('mouseleave', () => { copyBtn.style.background = '#111'; });
         copyBtn.addEventListener('click', () => {
             textarea.select();
             try { copy(text); } catch { }
             textarea.focus();
-            copyBtn.textContent = '✓ Copied!';
-            setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
+            copyBtn.textContent = 'Copied';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
         });
 
         const closeBtn = document.createElement('button');
-        closeBtn.textContent = '✕ Close';
-        closeBtn.style.cssText = btnStyle('background:none;color:#aaa;');
+        closeBtn.textContent = 'Close';
+        closeBtn.style.cssText = btnStyle('background:transparent;color:#888;');
+        closeBtn.addEventListener('mouseenter', () => { closeBtn.style.color = '#333'; });
+        closeBtn.addEventListener('mouseleave', () => { closeBtn.style.color = '#888'; });
         closeBtn.addEventListener('click', () => overlay.remove());
-        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 
         function btnStyle(extra) {
             return [
-                'padding:8px 14px', 'border:none', 'border-radius:6px',
-                'cursor:pointer', 'font-family:monospace', 'font-size:12px',
+                'padding:8px 18px', 'border:none', 'border-radius:6px',
+                'cursor:pointer', 'font-size:13px', 'font-family:inherit',
+                'transition:background .15s,color .15s',
             ].join(';') + extra;
         }
 
-        buttons.append(copyBtn, closeBtn);
-        box.append(header, textarea, buttons);
+        footer.append(copyBtn, closeBtn);
+        box.append(header, textarea, footer);
         overlay.appendChild(box);
         document.body.appendChild(overlay);
     }
