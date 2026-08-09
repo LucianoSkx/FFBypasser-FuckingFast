@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      2.9
+// @version      3.0
 // @description  Extracts FuckingFast share links from FitGirl pages and converts them into direct download URLs. Two-step flow, with links saved automatically between pages.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -317,7 +317,6 @@
             <button id="ffb-extract" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Extract FF links (FitGirl)</button>
             <button id="ffb-convert" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Convert → direct</button>
             <button id="ffb-paste" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Paste links manually</button>
-            <div id="ffb-links" style="max-height:140px;overflow-y:auto;background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:6px;font-size:11px;word-break:break-all;display:none;"></div>
             <div id="ffb-status" style="color:#888;margin-top:4px;word-break:break-all;"></div>
             <button id="ffb-close" style="padding:5px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#888;">Close</button>
         `;
@@ -327,24 +326,10 @@
 
     function wirePanel(panel) {
         const status = panel.querySelector('#ffb-status');
-        const linksBox = panel.querySelector('#ffb-links');
         const setStatus = t => { status.textContent = t; };
 
-        const showLinks = links => {
-            if (!links || !links.length) return;
-            linksBox.innerHTML = '';
-            links.forEach(l => {
-                const row = document.createElement('div');
-                row.style.cssText = 'padding:2px 0;border-bottom:1px solid #222;';
-                row.textContent = l;
-                linksBox.appendChild(row);
-            });
-            linksBox.style.display = 'block';
-        };
-
         panel.querySelector('#ffb-extract').addEventListener('click', () => {
-            const links = extractFromFitGirl();
-            showLinks(links);
+            extractFromFitGirl();
         });
 
         panel.querySelector('#ffb-convert').addEventListener('click', async () => {
