@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      3.1
+// @version      3.2
 // @description  Extracts FuckingFast share links from FitGirl pages and converts them into direct download URLs. Two-step flow, with links saved automatically between pages.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -282,9 +282,9 @@
 
         const closeBtn = document.createElement('button');
         closeBtn.textContent = 'Close';
-        closeBtn.style.cssText = btnStyle('background:transparent;color:#888;');
-        closeBtn.addEventListener('mouseenter', () => { closeBtn.style.color = '#ddd'; });
-        closeBtn.addEventListener('mouseleave', () => { closeBtn.style.color = '#888'; });
+        closeBtn.style.cssText = btnStyle('background:#e5484d;color:#fff;');
+        closeBtn.addEventListener('mouseenter', () => { closeBtn.style.background = '#d13438'; });
+        closeBtn.addEventListener('mouseleave', () => { closeBtn.style.background = '#e5484d'; });
         closeBtn.addEventListener('click', () => overlay.remove());
 
         function btnStyle(extra) {
