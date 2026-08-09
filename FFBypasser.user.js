@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      4.1
+// @version      4.2
 // @description  Extracts FuckingFast share links from FitGirl pages and resolves them into direct download URLs in a dedicated worker tab, bypassing Cloudflare. Job state is shared between tabs.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
@@ -638,7 +638,7 @@
             <div style="font-weight:600;font-size:13px;margin-bottom:6px;">FFBypasser</div>
             <div id="ffb-status" style="font-size:11px;color:#888;min-height:14px;"></div>
             ${role === 'collector'
-                ? '<button id="ffb-extract" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Extract FF links (FitGirl)</button>'
+                ? '<button id="ffb-extract" style="padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Extract FF links (FitGirl)</button><button id="ffb-show" style="display:none;padding:7px;border:none;border-radius:6px;cursor:pointer;background:#fff;color:#111;">Show links</button>'
                 : '<button id="ffb-retry" style="display:none;padding:7px;border:none;border-radius:6px;cursor:pointer;background:#e5484d;color:#fff;">Retry failed</button>'}
             <button id="ffb-close" style="padding:5px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#888;">Close</button>
         `;
@@ -680,13 +680,19 @@
     }
 
     function watchCollectorJob(panel) {
-        store.watchJob(raw => {
-            const job = recoverJob(raw);
-            if (!job) return;
+        const showBtn = panel.querySelector('#ffb-show');
+        const renderStatus = job => {
             const s = summarizeJob(job);
             setStatus(panel, s.done
                 ? `${s.succeeded}/${s.total} converted — ${s.failed} failed`
                 : `Working... ${s.succeeded}/${s.total} converted — ${s.failed} failed`);
+            if (showBtn) showBtn.style.display = s.done && s.succeeded > 0 ? 'block' : 'none';
+        };
+        store.watchJob(raw => {
+            const job = recoverJob(raw);
+            if (!job) return;
+            const s = summarizeJob(job);
+            renderStatus(job);
             if (s.done && s.succeeded > 0 && localStorage.getItem('ffbypasser.shownPopup') !== job.id) {
                 localStorage.setItem('ffbypasser.shownPopup', job.id);
                 const text = formatSuccessfulResults(job);
@@ -697,6 +703,7 @@
                 GM_notification({ text: `All ${s.total} links failed. Check the worker tab.`, timeout: 5000 });
             }
         });
+        return renderStatus;
     }
 
     /* ============================================================
@@ -730,13 +737,25 @@
                 const s = summarizeJob(job);
                 render(job);
                 if (s.done && s.failed === 0) {
-                    setStatus(panel, 'Done — returning to FitGirl...');
+                    const text = formatSuccessfulResults(job);
+                    setStatus(panel, `Done — ${s.succeeded} links ready`);
+                    if (text) {
+                        showLinksPopup(text.split('\n'));
+                        copyText(text);
+                        GM_notification({ text: `${s.succeeded} direct links copied to clipboard`, timeout: 6000 });
+                    }
                     setTimeout(() => {
                         try {
-                            if (window.opener) window.opener.focus();
-                            window.close();
+                            if (job && job.sourceUrl) {
+                                location.href = job.sourceUrl;
+                            } else if (window.opener) {
+                                window.opener.focus();
+                                window.close();
+                            }
                         } catch { }
-                    }, 700);
+                    }, 5000);
+                } else if (s.done && s.succeeded === 0) {
+                    GM_notification({ text: `All ${s.total} links failed. Click Retry failed.`, timeout: 6000 });
                 }
             } catch (error) {
                 setStatus(panel, `Error: ${error.message}`);
@@ -804,13 +823,19 @@
         if (isFitGirlPage()) {
             const panel = showPanel('collector');
             panel.querySelector('#ffb-extract').addEventListener('click', () => startExtract(panel));
-            watchCollectorJob(panel);
+            const renderStatus = watchCollectorJob(panel);
+            const showBtn = panel.querySelector('#ffb-show');
+            if (showBtn) {
+                showBtn.addEventListener('click', () => {
+                    const job = recoverJob(store.loadJob());
+                    const text = job ? formatSuccessfulResults(job) : '';
+                    if (text) showLinksPopup(text.split('\n'));
+                });
+            }
             const job = recoverJob(store.loadJob());
             if (job) {
+                renderStatus(job);
                 const s = summarizeJob(job);
-                if (s.total) setStatus(panel, s.done
-                    ? `${s.succeeded}/${s.total} converted — ${s.failed} failed`
-                    : `Working... ${s.succeeded}/${s.total} converted — ${s.failed} failed`);
                 if (s.done && s.succeeded > 0 && localStorage.getItem('ffbypasser.shownPopup') !== job.id) {
                     localStorage.setItem('ffbypasser.shownPopup', job.id);
                     const text = formatSuccessfulResults(job);
