@@ -1,22 +1,18 @@
-# FFBypasser — Direct Link Extractor (FuckingFast)
+# FFBypasser — FuckingFast Link Extractor
 
-A **Violentmonkey** userscript that extracts **FuckingFast** share links from **FitGirl** game pages and resolves them into direct download URLs in a **dedicated worker tab**.
-
-It opens a worker tab on `fuckingfast.co` that processes the queue using the real browser session — which bypasses the Cloudflare challenge that blocks direct requests. Results come back to the FitGirl page automatically.
+A **Violentmonkey** userscript that collects **FuckingFast** share links from any page (FitGirl, forums, etc.) and resolves them into direct download URLs — walking the file pages on `fuckingfast.co` (either in this tab or in background tabs) and bringing the results back.
 
 ## Features
 
-- Extracts FuckingFast links from FitGirl pages with one click
-- **Worker tab flow**: extraction opens a worker tab on fuckingfast.co that resolves every link automatically
-- **Cloudflare bypass**: strategies run inside the real browser session (direct POST, same-origin iframe fetch with token, real click with redirect capture, in-tab processing) — no more `ERR_BLOCKED_BY_RESPONSE`
-- **Persistent job state**: the job queue is shared across tabs; the worker resumes after reloads and page navigations
-- **Live progress**: the panel updates in real time (converted / failed / total)
-- **Popup with Copy button** showing the resolved direct links (copied to the clipboard automatically)
-- **Retry failed** button on the worker tab when some links fail
-- Worker lease prevents two workers from processing the same queue
-- The worker tab closes itself and returns to FitGirl when everything succeeds
-- Floating panel, Violentmonkey menu commands and `Ctrl+Shift+F` shortcut
-- No external dependencies
+- **Collects links from any page** — anchors + deep HTML scan, or paste links by hand (persistent history, restorable later)
+- **Silent fast path first** — `GM_xmlhttpRequest` POST to `/f/{id}/go` with HX headers; most links resolve with no visible tab
+- **Redirect mode (default)** — walks the file pages in the current tab (real browser session bypasses Cloudflare), resolves each file, then brings you back to the page you started on
+- **Background tab relay** — optional mode that opens background tabs that resolve themselves and report back via shared storage
+- **Cloudflare/CAPTCHA handling** — waits for Turnstile / reCAPTCHA / hCaptcha tokens and re-sends the request with the real token; falls back to clicking the real download control and capturing the `hx-redirect` header
+- **Modern dark-blue UI** — draggable, resizable, filter/search, status stats, progress bar, toast messages, per-link retry/copy/open
+- **Copy / export** — copy all direct links, copy source links as JSON, save `Out_Direct_Links.txt`
+- **Settings** — redirect vs background tabs, concurrency, delays, timeouts
+- `Alt+F` opens the panel, `Ctrl+Enter` resolves, `Esc` minimizes
 
 ## Installation
 
@@ -25,42 +21,28 @@ It opens a worker tab on `fuckingfast.co` that processes the queue using the rea
    ```
    https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/FFBypasser.user.js
    ```
-3. Done — the script activates on FitGirl and FuckingFast pages.
+3. Done — the script activates on every page and shows its FAB when it finds FuckingFast links.
 
-> **Note:** when the version adds new `@grant` permissions (like `GM_openInTab`), **reinstall the script** (remove + install) and reload open pages, otherwise Violentmonkey keeps the old permissions.
+> **Note:** when the version adds new `@grant` permissions (like `GM_xmlhttpRequest`), **reinstall the script** (remove + install) and reload open pages, otherwise Violentmonkey keeps the old permissions.
 
 ## Usage
 
-1. Open the desired **FitGirl** game page (e.g. `fitgirl-repacks.site`).
-2. Click **"Extract FF links (FitGirl)"** on the floating panel (or use the Violentmonkey menu command).
-3. A worker tab opens on `fuckingfast.co` and processes every link in the background.
-4. Watch the progress on the FitGirl panel (`converted / failed / total`).
-5. When the worker finishes, the popup shows all direct links — click **Copy** (they are also copied automatically).
-6. If the host shows a Cloudflare or CAPTCHA challenge in the worker tab, complete it manually and the worker continues.
-7. If some links failed, click **Retry failed** on the worker tab panel.
-
-> **Tip:** If you already have a list of links, use **"Paste links manually"** instead of extracting from FitGirl.
+1. Open the page that has FuckingFast links (e.g. a FitGirl game page). The script picks the links up automatically.
+2. Click **Resolve** (or `Ctrl+Enter`).
+3. **Redirect mode:** the tab walks each file page on fuckingfast.co — if a CAPTCHA appears, complete it and the script continues. When done, you are returned to the page you started on, with the results in the panel (and on the clipboard).
+4. **Background tabs mode:** turn off "Redirect this tab" in Settings to resolve via background tabs instead.
+5. Click **Copy links**, save as `.txt`, or open individual links from the list.
 
 ## How It Works
 
-The script plays two roles, detected by the page hostname:
+Per link, in cascade:
 
-### Collector (FitGirl page)
+1. **Fast path** — cross-origin `POST /f/{id}/go` via `GM_xmlhttpRequest` with `HX-Request` and the file page as Referer/Origin. This resolves most links silently.
+2. **Same-origin iframe** (when already on fuckingfast.co) — loads the file page in an invisible iframe, waits for the challenge token (Turnstile / reCAPTCHA / hCaptcha), and re-sends the request with the real form/hx-vals parameters.
+3. **Real click** — clicks the download control and captures the `hx-redirect` / `hx-location` header (intercepting `fetch` and `XMLHttpRequest`).
+4. **Redirect / relay walk** — if challenges keep blocking, the script walks the file pages in this tab (hop mode) or in background tabs (relay mode), where the real browser session can solve the challenge with your help.
 
-1. Collects every `fuckingfast.co` link on the page.
-2. Saves a persistent job (shared via GM storage) and opens the first link in a worker tab (`GM_openInTab` with `setParent`).
-3. Watches the job storage; when the job completes it shows the popup with the direct URLs.
-
-### Worker (FuckingFast page)
-
-For every queued link, in cascade:
-
-1. **Fast path** — `POST /f/{id}/go` with HX headers and `credentials: include`.
-2. **Same-origin iframe** — loads the file page in an invisible iframe, waits for the challenge token (Turnstile / reCAPTCHA / hCaptcha), and re-sends the request with the real form/hx-vals parameters.
-3. **Real click** — clicks the download control inside the frame and captures the `hx-redirect` / `hx-location` header (intercepting `fetch` and `XMLHttpRequest`).
-4. **In-tab navigation** — navigates the worker tab itself to the file page and processes it there (you can complete a visible Cloudflare challenge manually and the worker resumes).
-
-A worker lease (renewed every 5 s) guarantees a single active worker. When every link succeeds, the tab closes and returns the focus to FitGirl.
+Results are persisted in Violentmonkey storage, so the list survives reloads and can be restored later.
 
 ## Example Output
 
@@ -72,14 +54,13 @@ https://cdn3.example.com/file3.rar
 
 ## Notes
 
-- The worker tab must stay open while the queue is processed; failed items keep it open so you can retry them.
-- A delay is included between requests to avoid rate-limiting.
-- Failed requests are reported in the worker tab console without stopping the queue.
-- The script matches `fitgirl-repacks.site` and `*.fuckingfast.co` domains only.
+- First run after updating: **reinstall** the script (remove + install) so the new `@grant` permissions take effect.
+- A delay is included between requests to avoid rate-limiting (adjustable in Settings).
+- The script runs on every page (`@match *://*/*`) but only shows its button when it finds FuckingFast links — or press `Alt+F`.
 
 ## Credits
 
-Inspired by [cdxud/FFBypasser](https://github.com/cdxud/FFBypasser) and its [GUI variant](https://github.com/INMENR/FFBypasser-GUI) — adapted into a full Violentmonkey userscript with a worker-tab architecture.
+Inspired by [cdxud/FFBypasser](https://github.com/cdxud/FFBypasser) and its [GUI variant](https://github.com/INMENR/FFBypasser-GUI) — adapted into a full Violentmonkey userscript.
 
 ## License
 
