@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FFBypasser - FuckingFast Link Extractor
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      5.0
+// @version      5.0.1
 // @description  Collect fuckingfast.co links from any page (FitGirl etc.) and resolve them to direct download URLs. Redirects this tab through the file pages, then brings you back. Modern dark-blue popup UI, copy/export.
 // @name:pt-BR   FFBypasser - Extrator de Links FuckingFast
 // @description:pt-BR  Coleta links fuckingfast.co de qualquer página (FitGirl etc.) e os resolve para URLs de download direto. Redireciona esta aba pelas páginas de arquivo e depois traz você de volta. UI moderna azul-escura, copiar/exportar.
