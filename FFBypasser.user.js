@@ -1,8 +1,10 @@
 // ==UserScript==
 // @name         FFBypasser — Direct Link Extractor (FuckingFast)
 // @namespace    github.com/LucianoSkx/FFBypasser-FuckingFast
-// @version      4.4
+// @version      4.5
 // @description  Extracts FuckingFast share links from FitGirl pages and resolves them into direct download URLs in a dedicated worker tab, bypassing Cloudflare. Job state is shared between tabs.
+// @name:pt-BR   FFBypasser — Extrator de Links Diretos (FuckingFast)
+// @description:pt-BR  Extrai links de compartilhamento FuckingFast das páginas do FitGirl e os resolve em URLs de download direto em uma aba de trabalho dedicada, contornando o Cloudflare. O estado do trabalho é compartilhado entre as abas.
 // @author       cdxud (adapted for Violentmonkey)
 // @icon         https://raw.githubusercontent.com/LucianoSkx/FFBypasser-FuckingFast/main/ffbypasser-icon.png
 // @match        *://fitgirl-repacks.site/*
